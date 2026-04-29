@@ -1,0 +1,886 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hardware – Kelompok 3 | TKI</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --red: #c0392b;
+  --red-light: #e74c3c;
+  --red-pale: #fdecea;
+  --red-mid: #f5c6c2;
+  --cream: #f5f0eb;
+  --white: #ffffff;
+  --dark: #2c1a1a;
+  --muted: #7a5c5c;
+  --border: rgba(192,57,43,0.15);
+}
+
+html, body {
+  height: 100%; overflow: hidden;
+  background: var(--cream);
+  color: var(--dark);
+  font-family: 'Nunito', sans-serif;
+}
+
+/* === TEXTURE BG === */
+.texture {
+  position: absolute; inset: 0; z-index: 0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='400' height='400' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
+  background-size: 300px;
+  pointer-events: none;
+}
+
+/* === DECK & SLIDES === */
+.deck { width: 100vw; height: 100vh; position: relative; }
+
+.slide {
+  position: absolute; inset: 0;
+  background: var(--cream);
+  display: flex; flex-direction: column;
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.45s ease, transform 0.45s ease;
+  transform: translateX(50px);
+  overflow: hidden;
+}
+.slide.active { opacity: 1; pointer-events: all; transform: translateX(0); }
+.slide.exit { opacity: 0; transform: translateX(-50px); }
+
+/* === NAV === */
+.nav {
+  position: fixed; bottom: 1.5rem; left: 50%; transform: translateX(-50%);
+  z-index: 100; display: flex; align-items: center; gap: 14px;
+  background: var(--white); border: 2px solid var(--red);
+  border-radius: 50px; padding: 8px 20px;
+  box-shadow: 4px 4px 0 var(--red);
+}
+.nav button {
+  background: none; border: none; color: var(--red); cursor: pointer;
+  width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  font-size: 18px; transition: all 0.2s; font-weight: bold;
+}
+.nav button:hover { background: var(--red-pale); }
+.nav button:disabled { opacity: 0.25; cursor: not-allowed; }
+.slide-counter {
+  font-family: 'Space Mono', monospace; font-size: 11px; color: var(--muted);
+  min-width: 50px; text-align: center;
+}
+.dots { display: flex; gap: 5px; align-items: center; }
+.dot {
+  width: 6px; height: 6px; border-radius: 3px;
+  background: var(--red-mid); cursor: pointer; transition: all 0.3s;
+}
+.dot.active { width: 18px; background: var(--red); }
+
+/* === TOP BAR === */
+.topbar {
+  position: fixed; top: 0; left: 0; right: 0; height: 3px;
+  background: var(--red-mid); z-index: 200;
+}
+.topbar-fill {
+  height: 100%; background: var(--red); transition: width 0.4s ease;
+}
+
+/* === GROUP BADGE === */
+.group-badge {
+  position: fixed; top: 1rem; left: 1.2rem; z-index: 100;
+  font-family: 'Space Mono', monospace; font-size: 10px; color: var(--muted);
+  background: var(--white); border: 1.5px solid var(--border);
+  padding: 5px 12px; border-radius: 20px;
+}
+
+/* === SECTION TAG === */
+.section-tag {
+  display: inline-block; font-family: 'Space Mono', monospace; font-size: 10px;
+  padding: 4px 14px; border-radius: 20px; background: var(--red); color: white;
+  letter-spacing: 0.05em; margin-bottom: 1rem;
+}
+
+/* === CONTENT AREA === */
+.content { position: relative; z-index: 1; flex: 1; display: flex; flex-direction: column; }
+
+h1, h2, h3 { font-family: 'Fredoka One', cursive; letter-spacing: 0.5px; }
+
+/* === DECORATIVE CORNER === */
+.corner-deco {
+  position: absolute; z-index: 0;
+  opacity: 0.07; pointer-events: none;
+}
+
+/* === SLIDE: COVER === */
+#s0 { justify-content: center; align-items: center; text-align: center; padding: 2rem; }
+#s0 .oval-tag {
+  display: inline-block; border: 3px solid var(--red); color: var(--red);
+  font-family: 'Fredoka One', cursive; font-size: 1rem;
+  padding: 6px 22px; border-radius: 50px; margin-bottom: 1.5rem;
+  transform: rotate(-3deg);
+}
+#s0 h1 {
+  font-size: clamp(3rem, 8vw, 6rem); color: var(--red);
+  transform: rotate(-4deg); margin-bottom: 1.5rem;
+  text-shadow: 3px 3px 0 rgba(192,57,43,0.15);
+}
+#s0 .subject-tag {
+  font-family: 'Fredoka One', cursive; font-size: 1rem; color: var(--red);
+  letter-spacing: 1px; margin-bottom: 1.5rem;
+}
+#s0 .members { display: flex; flex-direction: column; gap: 4px; align-items: center; }
+#s0 .members li {
+  font-size: 14px; font-weight: 700; color: var(--dark);
+  list-style: none; display: flex; align-items: center; gap: 8px;
+}
+#s0 .members li::before { content: '•'; color: var(--red); font-size: 18px; }
+
+/* === SLIDE: DEFINISI === */
+#s1 { padding: 2.5rem 4rem; }
+#s1 .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; align-items: center; flex: 1; }
+#s1 .illus-box {
+  background: var(--white); border: 2px solid var(--border); border-radius: 16px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 7rem; padding: 2rem; min-height: 200px;
+  box-shadow: 4px 4px 0 var(--red-mid);
+}
+#s1 h2 { font-size: 2.5rem; color: var(--red); margin-bottom: 1rem; }
+#s1 p { font-size: 15px; color: var(--dark); line-height: 1.8; }
+.def-highlight {
+  background: var(--red-pale); border-left: 4px solid var(--red);
+  padding: 1rem 1.2rem; border-radius: 0 12px 12px 0; margin-top: 1rem;
+  font-size: 15px; font-weight: 600; color: var(--dark); line-height: 1.7;
+}
+
+/* === SLIDE: KOMPONEN === */
+#s2 { padding: 2.5rem 4rem; }
+#s2 h2 { font-size: 2.2rem; color: var(--red); margin-bottom: 0.3rem; }
+.comp-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-top: 1.2rem; flex: 1; }
+.comp-card {
+  background: var(--white); border: 2px solid var(--border);
+  border-radius: 14px; padding: 1.2rem 1rem; text-align: center;
+  position: relative; overflow: hidden; transition: transform 0.2s, box-shadow 0.2s;
+  cursor: default;
+}
+.comp-card:hover { transform: translateY(-5px); box-shadow: 0 8px 20px rgba(192,57,43,0.15); }
+.comp-card .top-stripe { height: 4px; background: var(--red); position: absolute; top: 0; left: 0; right: 0; border-radius: 14px 14px 0 0; }
+.comp-card .icon { font-size: 2.5rem; margin: 0.5rem 0; }
+.comp-card h3 { font-family: 'Fredoka One', cursive; font-size: 1.1rem; color: var(--red); margin-bottom: 6px; }
+.comp-card p { font-size: 12px; color: var(--muted); line-height: 1.5; }
+
+/* === SLIDE: INPUT DEVICE === */
+#s3 { padding: 2.5rem 4rem; }
+#s3 h2 { font-size: 2rem; color: var(--red); }
+.input-layout { display: grid; grid-template-columns: 1fr 1.2fr; gap: 2rem; flex: 1; margin-top: 1rem; }
+.device-list { display: flex; flex-direction: column; gap: 10px; }
+.device-item {
+  background: var(--white); border: 1.5px solid var(--border); border-radius: 12px;
+  padding: 10px 14px; display: flex; align-items: center; gap: 12px;
+  transition: border-color 0.2s, transform 0.2s;
+}
+.device-item:hover { border-color: var(--red); transform: translateX(4px); }
+.device-item .d-icon { font-size: 1.6rem; width: 36px; text-align: center; flex-shrink: 0; }
+.device-item .d-info h4 { font-size: 13px; font-weight: 800; color: var(--dark); }
+.device-item .d-info p { font-size: 11px; color: var(--muted); margin-top: 1px; }
+.right-panel {
+  background: var(--white); border: 2px solid var(--border); border-radius: 16px;
+  padding: 1.5rem; display: flex; flex-direction: column; gap: 1rem;
+}
+.right-panel h3 { font-family: 'Fredoka One', cursive; font-size: 1.4rem; color: var(--red); }
+.right-panel p { font-size: 13px; color: var(--muted); line-height: 1.7; }
+.icon-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; margin-top: 0.5rem; }
+.icon-box {
+  background: var(--red-pale); border-radius: 10px; padding: 8px;
+  text-align: center; font-size: 1.8rem;
+}
+
+/* === SLIDE: PROCESSING === */
+#s4 { padding: 2.5rem 4rem; }
+#s4 h2 { font-size: 2rem; color: var(--red); }
+.proc-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 1.2rem; margin-top: 1.2rem; flex: 1; }
+.proc-card {
+  background: var(--white); border: 2px solid var(--border); border-radius: 14px;
+  padding: 1.2rem; position: relative; transition: transform 0.2s;
+}
+.proc-card:hover { transform: scale(1.02); }
+.proc-card .num {
+  position: absolute; top: -12px; left: 14px;
+  background: var(--red); color: white; font-family: 'Fredoka One', cursive;
+  font-size: 12px; padding: 2px 10px; border-radius: 10px;
+}
+.proc-card .p-icon { font-size: 2rem; margin-bottom: 8px; }
+.proc-card h4 { font-family: 'Fredoka One', cursive; color: var(--red); font-size: 1.1rem; margin-bottom: 4px; }
+.proc-card p { font-size: 12px; color: var(--muted); line-height: 1.5; }
+.proc-card .spec { font-size: 11px; font-family: 'Space Mono', monospace; color: var(--red); margin-top: 6px; background: var(--red-pale); padding: 3px 8px; border-radius: 6px; display: inline-block; }
+
+/* === SLIDE: OUTPUT === */
+#s5 { padding: 2.5rem 4rem; }
+#s5 h2 { font-size: 2rem; color: var(--red); }
+.output-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 1rem; margin-top: 1.2rem; flex: 1; }
+.out-card {
+  background: var(--white); border: 1.5px solid var(--border); border-radius: 14px;
+  padding: 1rem 1.2rem; display: flex; gap: 14px; align-items: flex-start;
+  transition: border-color 0.2s;
+}
+.out-card:hover { border-color: var(--red); }
+.out-card .o-icon { font-size: 2rem; flex-shrink: 0; }
+.out-card h4 { font-family: 'Fredoka One', cursive; color: var(--red); font-size: 1rem; }
+.out-card p { font-size: 12px; color: var(--muted); line-height: 1.5; margin-top: 3px; }
+.out-card .badge { display: inline-block; font-size: 10px; background: var(--red); color: white; padding: 1px 8px; border-radius: 8px; margin-top: 4px; }
+
+/* === SLIDE: STORAGE === */
+#s6 { padding: 2.5rem 4rem; }
+#s6 h2 { font-size: 2rem; color: var(--red); }
+.storage-layout { display: grid; grid-template-columns: 1.2fr 1fr; gap: 2rem; flex: 1; margin-top: 1rem; align-items: start; }
+.stor-cards { display: flex; flex-direction: column; gap: 10px; }
+.stor-card {
+  background: var(--white); border: 1.5px solid var(--border); border-radius: 12px;
+  padding: 12px 14px; display: flex; align-items: center; gap: 12px;
+  transition: border-color 0.2s;
+}
+.stor-card:hover { border-color: var(--red); }
+.stor-card .s-icon { font-size: 1.8rem; flex-shrink: 0; }
+.stor-card h4 { font-size: 13px; font-weight: 800; color: var(--dark); }
+.stor-card p { font-size: 11px; color: var(--muted); }
+.stor-card .cap { font-family: 'Space Mono', monospace; font-size: 10px; color: var(--red); background: var(--red-pale); padding: 1px 7px; border-radius: 6px; margin-top: 2px; display: inline-block; }
+.stor-compare {
+  background: var(--white); border: 2px solid var(--border); border-radius: 14px; padding: 1.2rem;
+}
+.stor-compare h3 { font-family: 'Fredoka One', cursive; color: var(--red); font-size: 1.1rem; margin-bottom: 12px; }
+.compare-row { display: flex; flex-direction: column; gap: 8px; }
+.cmp { font-size: 12px; color: var(--muted); }
+.cmp strong { color: var(--dark); }
+.cmp .bar-wrap { height: 8px; background: var(--red-mid); border-radius: 4px; margin-top: 3px; }
+.cmp .bar { height: 100%; background: var(--red); border-radius: 4px; }
+
+/* === SLIDE: KB2 JARINGAN === */
+#s7 { padding: 2.5rem 4rem; }
+#s7 h2 { font-size: 2rem; color: var(--red); }
+.net-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 1rem; margin-top: 1.2rem; flex: 1; }
+.net-card {
+  background: var(--white); border: 2px solid var(--border); border-radius: 14px;
+  padding: 1.1rem; transition: transform 0.2s; position: relative;
+}
+.net-card:hover { transform: translateY(-4px); }
+.net-card::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px;
+  background: var(--red); border-radius: 14px 14px 0 0;
+}
+.net-card .n-icon { font-size: 2rem; margin-bottom: 6px; }
+.net-card h4 { font-family: 'Fredoka One', cursive; color: var(--red); font-size: 1rem; margin-bottom: 4px; }
+.net-card p { font-size: 12px; color: var(--muted); line-height: 1.5; }
+
+/* === SLIDE: KB2 TOPOLOGI === */
+#s8 { padding: 2.5rem 4rem; }
+#s8 h2 { font-size: 2rem; color: var(--red); }
+.topo-row { display: grid; grid-template-columns: repeat(3,1fr); gap: 1.2rem; margin-top: 1.2rem; flex: 1; align-items: start; }
+.topo-box {
+  background: var(--white); border: 2px solid var(--border); border-radius: 14px;
+  padding: 1.2rem; text-align: center;
+}
+.topo-box svg { margin-bottom: 8px; }
+.topo-box h4 { font-family: 'Fredoka One', cursive; color: var(--red); font-size: 1rem; margin-bottom: 4px; }
+.topo-box p { font-size: 12px; color: var(--muted); line-height: 1.5; }
+.jenis-jaringan {
+  margin-top: 1rem; background: var(--red-pale); border: 1.5px solid var(--red-mid);
+  border-radius: 12px; padding: 10px 16px; display: flex; gap: 1.5rem; align-items: center;
+}
+.jenis-jaringan .label { font-family: 'Fredoka One', cursive; color: var(--red); font-size: 14px; }
+.jenis-jaringan .types { display: flex; gap: 8px; flex-wrap: wrap; }
+.jenis-jaringan .type-tag {
+  background: var(--red); color: white; font-size: 11px; font-weight: 700;
+  padding: 3px 12px; border-radius: 12px;
+}
+
+/* === SLIDE: KB3 PERPUSTAKAAN === */
+#s9 { padding: 2.5rem 4rem; }
+#s9 h2 { font-size: 2rem; color: var(--red); }
+.lib-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 1rem; margin-top: 1.2rem; flex: 1; }
+.lib-card {
+  background: var(--white); border: 1.5px solid var(--border); border-radius: 14px;
+  padding: 1rem; transition: transform 0.2s;
+}
+.lib-card:hover { transform: translateY(-4px); border-color: var(--red); }
+.lib-card .l-icon { font-size: 2rem; margin-bottom: 6px; }
+.lib-card h4 { font-family: 'Fredoka One', cursive; color: var(--red); font-size: 1rem; margin-bottom: 4px; }
+.lib-card p { font-size: 12px; color: var(--muted); line-height: 1.5; }
+.lib-card .prio {
+  display: inline-block; margin-top: 6px; font-size: 10px; font-family: 'Space Mono', monospace;
+  padding: 2px 8px; border-radius: 8px; font-weight: 700;
+}
+.lib-card .prio.utama { background: var(--red); color: white; }
+.lib-card .prio.penting { background: var(--red-pale); color: var(--red); border: 1px solid var(--red-mid); }
+
+/* === SLIDE: SPESIFIKASI === */
+#s10 { padding: 2.5rem 4rem; }
+#s10 h2 { font-size: 2rem; color: var(--red); }
+.spec-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.2rem; margin-top: 1.2rem; flex: 1; }
+.spec-box {
+  background: var(--white); border: 2px solid var(--border); border-radius: 14px; padding: 1.2rem;
+}
+.spec-box h3 { font-family: 'Fredoka One', cursive; color: var(--red); font-size: 1.1rem; margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
+.spec-row { display: flex; align-items: flex-start; gap: 8px; font-size: 12px; color: var(--dark); margin-bottom: 6px; }
+.spec-row::before { content: '▸'; color: var(--red); flex-shrink: 0; }
+.spec-row span { color: var(--muted); margin-left: 2px; }
+
+/* === SLIDE: PENUTUP === */
+#s11 { justify-content: center; align-items: center; text-align: center; padding: 2rem; }
+#s11 .big-text {
+  font-family: 'Fredoka One', cursive; font-size: clamp(2.5rem, 7vw, 5.5rem);
+  color: var(--red); line-height: 1; margin-bottom: 1.5rem;
+  text-shadow: 4px 4px 0 rgba(192,57,43,0.12);
+}
+#s11 .sub { font-size: 15px; color: var(--muted); max-width: 500px; margin: 0 auto 2rem; line-height: 1.7; }
+.closing-pills { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-bottom: 1.5rem; }
+.cpill {
+  padding: 6px 18px; border-radius: 20px; border: 2px solid var(--red-mid);
+  font-size: 13px; color: var(--red); background: var(--white); font-weight: 700;
+  font-family: 'Fredoka One', cursive;
+}
+.member-row { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+.mpill { background: var(--red); color: white; padding: 5px 14px; border-radius: 20px; font-size: 12px; font-weight: 700; }
+
+/* === ANIM === */
+@keyframes fadeUp { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:translateY(0); } }
+.slide.active .content > * { animation: fadeUp 0.45s ease both; }
+.slide.active .content > *:nth-child(1) { animation-delay: 0.05s; }
+.slide.active .content > *:nth-child(2) { animation-delay: 0.13s; }
+.slide.active .content > *:nth-child(3) { animation-delay: 0.2s; }
+.slide.active .content > *:nth-child(4) { animation-delay: 0.27s; }
+
+/* Slide header decoration */
+.slide-header-bar {
+  width: 100%; height: 5px;
+  background: linear-gradient(90deg, var(--red) 0%, var(--red-mid) 100%);
+}
+</style>
+</head>
+<body>
+
+<div class="topbar"><div class="topbar-fill" id="progress"></div></div>
+<div class="group-badge">Kelompok 3 &nbsp;·&nbsp; Modul 4 TIK</div>
+
+<div class="deck" id="deck">
+
+  <!-- S0: COVER -->
+  <div class="slide active" id="s0">
+    <div class="texture"></div>
+    <!-- decorative gear SVGs -->
+    <svg class="corner-deco" style="top:-40px;left:-40px;width:200px;opacity:0.08" viewBox="0 0 200 200" fill="none">
+      <circle cx="100" cy="100" r="80" stroke="#c0392b" stroke-width="20"/>
+      <circle cx="100" cy="100" r="30" fill="#c0392b"/>
+    </svg>
+    <svg class="corner-deco" style="bottom:-30px;right:-30px;width:180px;opacity:0.07" viewBox="0 0 200 200" fill="none">
+      <rect x="20" y="20" width="160" height="160" rx="30" stroke="#c0392b" stroke-width="18"/>
+    </svg>
+    <div class="content" style="justify-content:center;align-items:center;">
+      <div class="oval-tag">KELOMPOK 3</div>
+      <h1>HARDWARE</h1>
+      <p class="subject-tag">TEKNOLOGI KOMUNIKASI DAN INFORMASI</p>
+      <ul class="members">
+        <li>Aliyyah Inantha Putri</li>
+        <li>Qisti Ansa Ramadhan</li>
+        <li>S. Novillia Ambami</li>
+        <li>Wafa. A</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- S1: APA ITU HARDWARE? -->
+  <div class="slide" id="s1">
+    <div class="texture"></div>
+    <div class="slide-header-bar"></div>
+    <div class="content" style="padding:2.5rem 4rem;justify-content:center;">
+      <div class="section-tag">KB 1 · PENGERTIAN</div>
+      <div class="two-col">
+        <div class="illus-box">🖥️</div>
+        <div>
+          <h2>Apa itu<br>Hardware?</h2>
+          <p style="color:var(--muted);margin-top:0.8rem;">
+            Hardware (perangkat keras) adalah semua jenis komponen pada sebuah perangkat komputer yang memiliki <strong>bentuk fisik</strong> — bisa dilihat, disentuh, dan dirasakan secara nyata.
+          </p>
+          <div class="def-highlight">
+            💡 Hardware bekerja bersama <em>software</em> untuk menjalankan sistem komputer secara keseluruhan.
+          </div>
+          <p style="font-size:13px;color:var(--muted);margin-top:1rem;line-height:1.6;">
+            Tanpa hardware, program dan aplikasi tidak dapat berjalan. Sebaliknya, hardware tidak berguna tanpa software yang mengendalikannya.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- S2: KOMPONEN PERANGKAT KERAS -->
+  <div class="slide" id="s2">
+    <div class="texture"></div>
+    <div class="slide-header-bar"></div>
+    <div class="content" style="padding:2.5rem 4rem;justify-content:flex-start;">
+      <div class="section-tag">KB 1 · KOMPONEN</div>
+      <h2>Komponen Perangkat Keras</h2>
+      <div class="comp-grid">
+        <div class="comp-card">
+          <div class="top-stripe"></div>
+          <div class="icon">⌨️</div>
+          <h3>Input Device</h3>
+          <p>Perangkat untuk memasukkan data/perintah ke dalam komputer</p>
+        </div>
+        <div class="comp-card">
+          <div class="top-stripe"></div>
+          <div class="icon">⚙️</div>
+          <h3>Processing Device</h3>
+          <p>Perangkat untuk mengolah data berdasarkan instruksi software</p>
+        </div>
+        <div class="comp-card">
+          <div class="top-stripe"></div>
+          <div class="icon">🖥️</div>
+          <h3>Output Device</h3>
+          <p>Perangkat untuk menampilkan hasil pengolahan data</p>
+        </div>
+        <div class="comp-card">
+          <div class="top-stripe"></div>
+          <div class="icon">💾</div>
+          <h3>Storage Device</h3>
+          <p>Perangkat untuk menyimpan data secara permanen maupun sementara</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- S3: INPUT DEVICE -->
+  <div class="slide" id="s3">
+    <div class="texture"></div>
+    <div class="slide-header-bar"></div>
+    <div class="content" style="padding:2.5rem 4rem;justify-content:flex-start;">
+      <div class="section-tag">KB 1 · INPUT DEVICE</div>
+      <h2>Perangkat Masukan (Input Device)</h2>
+      <div class="input-layout">
+        <div class="device-list">
+          <div class="device-item"><div class="d-icon">⌨️</div><div class="d-info"><h4>Keyboard</h4><p>Menginput teks, angka, dan perintah keyboard shortcut</p></div></div>
+          <div class="device-item"><div class="d-icon">🖱️</div><div class="d-info"><h4>Mouse</h4><p>Menggerakkan kursor dan memilih elemen di layar</p></div></div>
+          <div class="device-item"><div class="d-icon">🖨️</div><div class="d-info"><h4>Scanner</h4><p>Mengubah dokumen fisik menjadi data digital</p></div></div>
+          <div class="device-item"><div class="d-icon">🎤</div><div class="d-info"><h4>Microphone</h4><p>Menginput suara sebagai data audio</p></div></div>
+          <div class="device-item"><div class="d-icon">🕹️</div><div class="d-info"><h4>Joystick</h4><p>Menginput perintah arah untuk game/simulasi</p></div></div>
+          <div class="device-item"><div class="d-icon">📷</div><div class="d-info"><h4>Kamera/Webcam</h4><p>Menginput gambar dan video ke dalam sistem</p></div></div>
+        </div>
+        <div class="right-panel">
+          <h3>Fungsi Utama</h3>
+          <p>Input device berfungsi sebagai <strong>pintu masuk data</strong> ke dalam komputer. Perangkat ini mengubah informasi dari dunia nyata (ketikan, gerakan, suara) menjadi sinyal digital yang bisa diproses oleh CPU.</p>
+          <div class="icon-grid">
+            <div class="icon-box">⌨️</div>
+            <div class="icon-box">🖱️</div>
+            <div class="icon-box">📷</div>
+            <div class="icon-box">🎤</div>
+            <div class="icon-box">🕹️</div>
+            <div class="icon-box">🖨️</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- S4: PROCESSING DEVICE -->
+  <div class="slide" id="s4">
+    <div class="texture"></div>
+    <div class="slide-header-bar"></div>
+    <div class="content" style="padding:2.5rem 4rem;justify-content:flex-start;">
+      <div class="section-tag">KB 1 · PROCESSING DEVICE</div>
+      <h2>Perangkat Proses (Processing Device)</h2>
+      <div class="proc-grid">
+        <div class="proc-card" style="margin-top:12px;">
+          <div class="num">01</div>
+          <div class="p-icon">🔲</div>
+          <h4>Prosesor (CPU)</h4>
+          <p>Otak komputer yang mengeksekusi instruksi program. Semakin tinggi clock speed, semakin cepat pemrosesan.</p>
+          <span class="spec">Intel Core / AMD Ryzen</span>
+        </div>
+        <div class="proc-card" style="margin-top:12px;">
+          <div class="num">02</div>
+          <div class="p-icon">🎮</div>
+          <h4>GPU</h4>
+          <p>Graphics Processing Unit — memproses data grafis dan visual. Sangat penting untuk rendering, game, dan AI.</p>
+          <span class="spec">NVIDIA / AMD Radeon</span>
+        </div>
+        <div class="proc-card" style="margin-top:12px;">
+          <div class="num">03</div>
+          <div class="p-icon">📊</div>
+          <h4>RAM (Memori)</h4>
+          <p>Memori sementara untuk menyimpan data yang sedang aktif digunakan. Lebih besar RAM = lebih lancar multitasking.</p>
+          <span class="spec">4 GB – 64 GB DDR4/5</span>
+        </div>
+        <div class="proc-card" style="margin-top:12px;">
+          <div class="num">04</div>
+          <div class="p-icon">🔌</div>
+          <h4>Motherboard</h4>
+          <p>Papan induk yang menghubungkan semua komponen komputer. Semua perangkat terhubung melalui motherboard.</p>
+          <span class="spec">Socket AM5 / LGA 1700</span>
+        </div>
+        <div class="proc-card" style="margin-top:12px;">
+          <div class="num">05</div>
+          <div class="p-icon">⚡</div>
+          <h4>Power Supply (PSU)</h4>
+          <p>Mengubah arus listrik AC dari PLN menjadi DC yang dibutuhkan komponen komputer.</p>
+          <span class="spec">450W – 1000W</span>
+        </div>
+        <div class="proc-card" style="margin-top:12px;">
+          <div class="num">06</div>
+          <div class="p-icon">❄️</div>
+          <h4>Sistem Pendingin</h4>
+          <p>Heatsink, kipas, atau liquid cooling untuk menjaga suhu prosesor agar tidak overheat saat bekerja.</p>
+          <span class="spec">Air / Liquid Cooling</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- S5: OUTPUT DEVICE -->
+  <div class="slide" id="s5">
+    <div class="texture"></div>
+    <div class="slide-header-bar"></div>
+    <div class="content" style="padding:2.5rem 4rem;justify-content:flex-start;">
+      <div class="section-tag">KB 1 · OUTPUT DEVICE</div>
+      <h2>Perangkat Hasil (Output Device)</h2>
+      <div class="output-grid">
+        <div class="out-card">
+          <div class="o-icon">🖥️</div>
+          <div>
+            <h4>Monitor</h4>
+            <p>Menampilkan hasil pemrosesan secara visual. Tersedia dalam layar LCD, LED, dan OLED dengan berbagai resolusi.</p>
+            <span class="badge">VISUAL</span>
+          </div>
+        </div>
+        <div class="out-card">
+          <div class="o-icon">🖨️</div>
+          <div>
+            <h4>Printer</h4>
+            <p>Mencetak dokumen atau gambar dari komputer ke kertas/media fisik. Ada jenis inkjet, laser, dan thermal.</p>
+            <span class="badge">CETAK</span>
+          </div>
+        </div>
+        <div class="out-card">
+          <div class="o-icon">🔊</div>
+          <div>
+            <h4>Speaker</h4>
+            <p>Mengubah sinyal audio digital menjadi suara yang bisa didengar. Termasuk headphone dan earphone.</p>
+            <span class="badge">AUDIO</span>
+          </div>
+        </div>
+        <div class="out-card">
+          <div class="o-icon">📽️</div>
+          <div>
+            <h4>Proyektor</h4>
+            <p>Memproyeksikan tampilan komputer ke layar besar. Sangat berguna untuk presentasi dan pembelajaran.</p>
+            <span class="badge">VISUAL</span>
+          </div>
+        </div>
+        <div class="out-card">
+          <div class="o-icon">📠</div>
+          <div>
+            <h4>Plotter</h4>
+            <p>Printer khusus untuk mencetak gambar teknis berukuran besar seperti blueprint dan desain arsitektur.</p>
+            <span class="badge">CETAK BESAR</span>
+          </div>
+        </div>
+        <div class="out-card">
+          <div class="o-icon">📟</div>
+          <div>
+            <h4>Headset / Earphone</h4>
+            <p>Perangkat audio personal yang menggabungkan speaker (output) dan mikrofon (input) dalam satu perangkat.</p>
+            <span class="badge">AUDIO</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- S6: STORAGE DEVICE -->
+  <div class="slide" id="s6">
+    <div class="texture"></div>
+    <div class="slide-header-bar"></div>
+    <div class="content" style="padding:2.5rem 4rem;justify-content:flex-start;">
+      <div class="section-tag">KB 1 · STORAGE DEVICE</div>
+      <h2>Perangkat Penyimpanan (Storage Device)</h2>
+      <div class="storage-layout">
+        <div class="stor-cards">
+          <div class="stor-card"><div class="s-icon">💿</div><div><h4>Hard Disk Drive (HDD)</h4><p>Penyimpanan magnetik tradisional, kapasitas besar, harga terjangkau</p><span class="cap">500GB – 20TB</span></div></div>
+          <div class="stor-card"><div class="s-icon">💾</div><div><h4>Solid State Drive (SSD)</h4><p>Penyimpanan cepat berbasis flash memory, tahan guncangan</p><span class="cap">128GB – 8TB</span></div></div>
+          <div class="stor-card"><div class="s-icon">🔌</div><div><h4>Flash Drive (USB)</h4><p>Penyimpanan portabel yang bisa dicabut-pasang dengan mudah</p><span class="cap">4GB – 1TB</span></div></div>
+          <div class="stor-card"><div class="s-icon">💿</div><div><h4>CD / DVD / Blu-ray</h4><p>Media optik untuk penyimpanan dan distribusi data/software</p><span class="cap">700MB – 50GB</span></div></div>
+          <div class="stor-card"><div class="s-icon">📦</div><div><h4>NAS / Cloud Storage</h4><p>Penyimpanan jaringan atau online yang bisa diakses dari mana saja</p><span class="cap">Unlimited</span></div></div>
+        </div>
+        <div class="stor-compare">
+          <h3>⚡ HDD vs SSD</h3>
+          <div class="compare-row">
+            <div class="cmp"><strong>Kecepatan Baca</strong>
+              <div style="display:flex;gap:6px;align-items:center;margin-top:4px;">
+                <span style="width:32px;font-size:10px;">HDD</span>
+                <div class="bar-wrap" style="flex:1;"><div class="bar" style="width:25%;background:#c0392b88;"></div></div>
+              </div>
+              <div style="display:flex;gap:6px;align-items:center;margin-top:3px;">
+                <span style="width:32px;font-size:10px;">SSD</span>
+                <div class="bar-wrap" style="flex:1;"><div class="bar" style="width:90%;"></div></div>
+              </div>
+            </div>
+            <div class="cmp" style="margin-top:8px;"><strong>Kapasitas</strong>
+              <div style="display:flex;gap:6px;align-items:center;margin-top:4px;">
+                <span style="width:32px;font-size:10px;">HDD</span>
+                <div class="bar-wrap" style="flex:1;"><div class="bar" style="width:85%;"></div></div>
+              </div>
+              <div style="display:flex;gap:6px;align-items:center;margin-top:3px;">
+                <span style="width:32px;font-size:10px;">SSD</span>
+                <div class="bar-wrap" style="flex:1;"><div class="bar" style="width:60%;background:#c0392b88;"></div></div>
+              </div>
+            </div>
+            <div class="cmp" style="margin-top:8px;"><strong>Harga per GB</strong>
+              <div style="display:flex;gap:6px;align-items:center;margin-top:4px;">
+                <span style="width:32px;font-size:10px;">HDD</span>
+                <div class="bar-wrap" style="flex:1;"><div class="bar" style="width:20%;"></div></div>
+              </div>
+              <div style="display:flex;gap:6px;align-items:center;margin-top:3px;">
+                <span style="width:32px;font-size:10px;">SSD</span>
+                <div class="bar-wrap" style="flex:1;"><div class="bar" style="width:55%;background:#c0392b88;"></div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- S7: KB2 - PERANGKAT JARINGAN -->
+  <div class="slide" id="s7">
+    <div class="texture"></div>
+    <div class="slide-header-bar"></div>
+    <div class="content" style="padding:2.5rem 4rem;justify-content:flex-start;">
+      <div class="section-tag">KB 2 · PERANGKAT JARINGAN</div>
+      <h2>Perangkat Keras Jaringan</h2>
+      <div class="net-grid">
+        <div class="net-card"><div class="n-icon">📡</div><h4>NIC (Network Interface Card)</h4><p>Kartu jaringan yang terpasang di komputer untuk koneksi ke jaringan, tersedia versi wired (LAN) dan wireless (WiFi).</p></div>
+        <div class="net-card"><div class="n-icon">🌐</div><h4>Router</h4><p>Mengarahkan paket data antar jaringan. Berfungsi sebagai gateway antara jaringan lokal dan internet.</p></div>
+        <div class="net-card"><div class="n-icon">🔀</div><h4>Switch</h4><p>Menghubungkan banyak perangkat dalam LAN. Lebih cerdas dari hub karena mengirim data langsung ke tujuan.</p></div>
+        <div class="net-card"><div class="n-icon">📶</div><h4>Access Point (WiFi)</h4><p>Memperluas jangkauan jaringan nirkabel agar perangkat WiFi bisa terhubung ke jaringan yang ada.</p></div>
+        <div class="net-card"><div class="n-icon">🔌</div><h4>Kabel Jaringan</h4><p>Media transmisi fisik: kabel UTP (Cat5e/Cat6), kabel koaksial, dan fiber optik untuk kecepatan sangat tinggi.</p></div>
+        <div class="net-card"><div class="n-icon">📱</div><h4>Modem</h4><p>Mengubah sinyal digital ke analog dan sebaliknya, memungkinkan koneksi internet melalui ISP (provider).</p></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- S8: KB2 - TOPOLOGI -->
+  <div class="slide" id="s8">
+    <div class="texture"></div>
+    <div class="slide-header-bar"></div>
+    <div class="content" style="padding:2.5rem 4rem;justify-content:flex-start;">
+      <div class="section-tag">KB 2 · TOPOLOGI JARINGAN</div>
+      <h2>Jenis Topologi Jaringan</h2>
+      <div class="topo-row">
+        <div class="topo-box">
+          <svg width="90" height="75" viewBox="0 0 90 75">
+            <circle cx="45" cy="38" r="10" fill="#c0392b" opacity="0.8"/>
+            <circle cx="18" cy="16" r="6" fill="none" stroke="#c0392b" stroke-width="2"/>
+            <circle cx="72" cy="16" r="6" fill="none" stroke="#c0392b" stroke-width="2"/>
+            <circle cx="18" cy="62" r="6" fill="none" stroke="#c0392b" stroke-width="2"/>
+            <circle cx="72" cy="62" r="6" fill="none" stroke="#c0392b" stroke-width="2"/>
+            <circle cx="45" cy="9" r="6" fill="none" stroke="#c0392b" stroke-width="2"/>
+            <line x1="45" y1="28" x2="18" y2="16" stroke="#c0392b" stroke-width="1.5" opacity="0.5"/>
+            <line x1="45" y1="28" x2="72" y2="16" stroke="#c0392b" stroke-width="1.5" opacity="0.5"/>
+            <line x1="45" y1="48" x2="18" y2="62" stroke="#c0392b" stroke-width="1.5" opacity="0.5"/>
+            <line x1="45" y1="48" x2="72" y2="62" stroke="#c0392b" stroke-width="1.5" opacity="0.5"/>
+            <line x1="45" y1="28" x2="45" y2="15" stroke="#c0392b" stroke-width="1.5" opacity="0.5"/>
+          </svg>
+          <h4>Bintang (Star)</h4>
+          <p>Semua node terhubung ke satu pusat (switch/hub). Mudah dikelola, kerusakan satu node tidak memengaruhi lainnya.</p>
+        </div>
+        <div class="topo-box">
+          <svg width="90" height="75" viewBox="0 0 90 75">
+            <line x1="10" y1="38" x2="80" y2="38" stroke="#c0392b" stroke-width="2.5" opacity="0.6"/>
+            <circle cx="22" cy="22" r="6" fill="none" stroke="#c0392b" stroke-width="2"/>
+            <circle cx="45" cy="22" r="6" fill="none" stroke="#c0392b" stroke-width="2"/>
+            <circle cx="68" cy="22" r="6" fill="none" stroke="#c0392b" stroke-width="2"/>
+            <circle cx="33" cy="56" r="6" fill="none" stroke="#c0392b" stroke-width="2"/>
+            <circle cx="60" cy="56" r="6" fill="none" stroke="#c0392b" stroke-width="2"/>
+            <line x1="22" y1="28" x2="22" y2="38" stroke="#c0392b" stroke-width="1" opacity="0.6"/>
+            <line x1="45" y1="28" x2="45" y2="38" stroke="#c0392b" stroke-width="1" opacity="0.6"/>
+            <line x1="68" y1="28" x2="68" y2="38" stroke="#c0392b" stroke-width="1" opacity="0.6"/>
+            <line x1="33" y1="50" x2="33" y2="38" stroke="#c0392b" stroke-width="1" opacity="0.6"/>
+            <line x1="60" y1="50" x2="60" y2="38" stroke="#c0392b" stroke-width="1" opacity="0.6"/>
+          </svg>
+          <h4>Bus</h4>
+          <p>Semua node terhubung ke satu kabel utama. Sederhana namun jika kabel pusat rusak, seluruh jaringan terganggu.</p>
+        </div>
+        <div class="topo-box">
+          <svg width="90" height="75" viewBox="0 0 90 75">
+            <circle cx="45" cy="38" r="25" fill="none" stroke="#c0392b" stroke-width="1.5" stroke-dasharray="5,3" opacity="0.4"/>
+            <circle cx="45" cy="13" r="6" fill="none" stroke="#c0392b" stroke-width="2"/>
+            <circle cx="70" cy="38" r="6" fill="none" stroke="#c0392b" stroke-width="2"/>
+            <circle cx="45" cy="63" r="6" fill="none" stroke="#c0392b" stroke-width="2"/>
+            <circle cx="20" cy="38" r="6" fill="none" stroke="#c0392b" stroke-width="2"/>
+            <path d="M45 19 A26 26 0 0 1 64 32" stroke="#c0392b" stroke-width="1.5" fill="none"/>
+            <path d="M70 44 A26 26 0 0 1 51 57" stroke="#c0392b" stroke-width="1.5" fill="none"/>
+            <path d="M45 57 A26 26 0 0 1 26 44" stroke="#c0392b" stroke-width="1.5" fill="none"/>
+            <path d="M20 32 A26 26 0 0 1 39 19" stroke="#c0392b" stroke-width="1.5" fill="none"/>
+          </svg>
+          <h4>Cincin (Ring)</h4>
+          <p>Setiap node terhubung ke dua node membentuk lingkaran. Data mengalir satu arah, performa stabil.</p>
+        </div>
+      </div>
+      <div class="jenis-jaringan">
+        <span class="label">Jenis Jaringan:</span>
+        <div class="types">
+          <span class="type-tag">LAN</span>
+          <span class="type-tag">MAN</span>
+          <span class="type-tag">WAN</span>
+          <span class="type-tag">WLAN</span>
+          <span class="type-tag">PAN</span>
+        </div>
+        <span style="font-size:12px;color:var(--muted);">Local · Metropolitan · Wide · Wireless · Personal Area Network</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- S9: KB3 KEBUTUHAN PERPUSTAKAAN -->
+  <div class="slide" id="s9">
+    <div class="texture"></div>
+    <div class="slide-header-bar"></div>
+    <div class="content" style="padding:2.5rem 4rem;justify-content:flex-start;">
+      <div class="section-tag">KB 3 · KEBUTUHAN PERPUSTAKAAN</div>
+      <h2>Kebutuhan Hardware Bidang Perpustakaan</h2>
+      <div class="lib-grid">
+        <div class="lib-card"><div class="l-icon">🖥️</div><h4>Server Perpustakaan</h4><p>Menyimpan database koleksi, data anggota, dan sistem informasi perpustakaan (OPAC/SIP) secara terpusat.</p><span class="prio utama">UTAMA</span></div>
+        <div class="lib-card"><div class="l-icon">💻</div><h4>Komputer Petugas</h4><p>Workstation untuk petugas mengelola sirkulasi, katalog, dan administrasi layanan perpustakaan harian.</p><span class="prio utama">UTAMA</span></div>
+        <div class="lib-card"><div class="l-icon">🔍</div><h4>Terminal OPAC</h4><p>Komputer khusus untuk pengunjung mencari koleksi secara mandiri melalui Online Public Access Catalog.</p><span class="prio utama">UTAMA</span></div>
+        <div class="lib-card"><div class="l-icon">📡</div><h4>Jaringan (LAN/WiFi)</h4><p>Infrastruktur jaringan untuk menghubungkan semua perangkat dan menyediakan akses internet bagi pengunjung.</p><span class="prio utama">UTAMA</span></div>
+        <div class="lib-card"><div class="l-icon">🖨️</div><h4>Printer & Barcode Printer</h4><p>Mencetak kartu anggota, label barcode buku, struk peminjaman, dan laporan administrasi perpustakaan.</p><span class="prio penting">PENTING</span></div>
+        <div class="lib-card"><div class="l-icon">📊</div><h4>Barcode Reader & Scanner</h4><p>Membaca kode buku saat peminjaman/pengembalian. Scanner untuk digitalisasi koleksi dan arsip.</p><span class="prio penting">PENTING</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- S10: SPESIFIKASI -->
+  <div class="slide" id="s10">
+    <div class="texture"></div>
+    <div class="slide-header-bar"></div>
+    <div class="content" style="padding:2.5rem 4rem;justify-content:flex-start;">
+      <div class="section-tag">KB 3 · SPESIFIKASI MINIMUM</div>
+      <h2>Rekomendasi Spesifikasi Hardware</h2>
+      <div class="spec-grid">
+        <div class="spec-box">
+          <h3>🖥️ Komputer Server</h3>
+          <div class="spec-row">Prosesor <span>Intel Xeon / Core i5 ke atas</span></div>
+          <div class="spec-row">RAM <span>Minimal 8 GB (rekomendasi 16 GB)</span></div>
+          <div class="spec-row">Storage <span>HDD 1 TB + SSD untuk sistem</span></div>
+          <div class="spec-row">OS <span>Windows Server / Linux Ubuntu</span></div>
+          <div class="spec-row">UPS <span>Terhubung langsung ke server</span></div>
+        </div>
+        <div class="spec-box">
+          <h3>💻 Komputer Client/OPAC</h3>
+          <div class="spec-row">Prosesor <span>Core i3 atau setara</span></div>
+          <div class="spec-row">RAM <span>Minimal 4 GB</span></div>
+          <div class="spec-row">Storage <span>SSD 256 GB</span></div>
+          <div class="spec-row">Monitor <span>19 inci ke atas</span></div>
+          <div class="spec-row">OS <span>Windows 10/11</span></div>
+        </div>
+        <div class="spec-box">
+          <h3>🌐 Infrastruktur Jaringan</h3>
+          <div class="spec-row">Kabel <span>UTP Cat6 antar perangkat</span></div>
+          <div class="spec-row">Switch <span>Minimal 8-port untuk workstation</span></div>
+          <div class="spec-row">Router <span>Dilengkapi firewall keamanan</span></div>
+          <div class="spec-row">WiFi <span>Access point untuk area baca</span></div>
+          <div class="spec-row">Bandwidth <span>Minimal 20 Mbps dedicated</span></div>
+        </div>
+        <div class="spec-box">
+          <h3>📦 Perangkat Pendukung</h3>
+          <div class="spec-row">Scanner <span>Barcode scanner USB/wireless</span></div>
+          <div class="spec-row">Printer <span>Laser printer untuk label & laporan</span></div>
+          <div class="spec-row">Digitalisasi <span>Flatbed scanner dokumen A4</span></div>
+          <div class="spec-row">Keamanan <span>CCTV untuk pengawasan koleksi</span></div>
+          <div class="spec-row">Backup <span>NAS / external drive untuk backup</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- S11: PENUTUP -->
+  <div class="slide" id="s11">
+    <div class="texture"></div>
+    <svg class="corner-deco" style="top:-40px;right:-40px;width:250px;opacity:0.06" viewBox="0 0 200 200" fill="none">
+      <circle cx="100" cy="100" r="85" stroke="#c0392b" stroke-width="18"/>
+    </svg>
+    <svg class="corner-deco" style="bottom:-50px;left:-30px;width:220px;opacity:0.06" viewBox="0 0 200 200" fill="none">
+      <rect x="15" y="15" width="170" height="170" rx="35" stroke="#c0392b" stroke-width="18"/>
+    </svg>
+    <div class="content" style="justify-content:center;align-items:center;">
+      <div class="section-tag">MODUL 4 · TEKNOLOGI KOMUNIKASI DAN INFORMASI</div>
+      <div class="big-text">TERIMA KASIH!</div>
+      <p class="sub">Perangkat keras adalah fondasi dari seluruh sistem informasi. Pemilihan hardware yang tepat menjamin layanan yang andal, efisien, dan berkelanjutan.</p>
+      <div class="closing-pills">
+        <div class="cpill">⌨️ KB1 · Perangkat Keras</div>
+        <div class="cpill">🌐 KB2 · Perangkat Jaringan</div>
+        <div class="cpill">📚 KB3 · Kebutuhan Perpustakaan</div>
+      </div>
+      <div class="member-row">
+        <div class="mpill">Aliyyah Inantha Putri</div>
+        <div class="mpill">Qisti Ansa Ramadhan</div>
+        <div class="mpill">S. Novillia Ambami</div>
+        <div class="mpill">Wafa. A</div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /deck -->
+
+<!-- NAV -->
+<nav class="nav">
+  <button id="btn-prev" onclick="prevSlide()" disabled>&#8592;</button>
+  <div class="dots" id="dots"></div>
+  <div class="slide-counter" id="counter">1 / 12</div>
+  <button id="btn-next" onclick="nextSlide()">&#8594;</button>
+</nav>
+
+<script>
+  const slides = document.querySelectorAll('.slide');
+  const total = slides.length;
+  let current = 0;
+  let exiting = null;
+
+  function buildDots() {
+    const d = document.getElementById('dots');
+    for (let i = 0; i < total; i++) {
+      const dot = document.createElement('div');
+      dot.className = 'dot' + (i === 0 ? ' active' : '');
+      dot.onclick = () => goToSlide(i);
+      d.appendChild(dot);
+    }
+  }
+
+  function updateUI() {
+    document.getElementById('counter').textContent = (current + 1) + ' / ' + total;
+    document.querySelectorAll('.dot').forEach((d, i) => d.classList.toggle('active', i === current));
+    document.getElementById('btn-prev').disabled = current === 0;
+    document.getElementById('btn-next').disabled = current === total - 1;
+    document.getElementById('progress').style.width = ((current / (total - 1)) * 100) + '%';
+  }
+
+  function goToSlide(n) {
+    if (n === current || n < 0 || n >= total) return;
+    if (exiting !== null) { slides[exiting].classList.remove('exit'); exiting = null; }
+    slides[current].classList.remove('active');
+    slides[current].classList.add('exit');
+    const prev = current; exiting = prev;
+    setTimeout(() => { slides[prev].classList.remove('exit'); exiting = null; }, 450);
+    current = n;
+    slides[current].classList.add('active');
+    updateUI();
+  }
+
+  function nextSlide() { goToSlide(current + 1); }
+  function prevSlide() { goToSlide(current - 1); }
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); nextSlide(); }
+    if (e.key === 'ArrowLeft') prevSlide();
+  });
+
+  buildDots();
+  updateUI();
+</script>
+</body>
+</html>
